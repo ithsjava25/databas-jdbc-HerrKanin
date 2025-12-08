@@ -102,6 +102,7 @@ public class Main {
 
             String choice = scanner.nextLine().trim();
 
+            //Hanterar vilka menyval som användaren gör
             switch (choice) {
                 case "0" -> running = false;
                 case "1" -> listMoonMissions(connection);
@@ -116,6 +117,8 @@ public class Main {
             }
         }
     }
+
+    //Skriver ut menyn
     private void printMenu() {
         System.out.println("1) List moon missions");
         System.out.println("2) Get a moon mission by mission:id");
@@ -126,25 +129,30 @@ public class Main {
         System.out.println("0) Exit");
         System.out.print("Choose: ");
     }
+
+    //Listar alla rymduppdrag
     private void listMoonMissions(Connection connection) throws SQLException {
         String sql = "select spacecraft from moon_mission";
 
         try (var ps = connection.prepareStatement(sql);
             var rs = ps.executeQuery()) {
 
+            //Loopa igenom alla rader och skriv ut namnet på rymdfarkosten
             while (rs.next()) {
                 String spacecraft = rs.getString("spacecraft");
                 System.out.println(spacecraft);
             }
         }
     }
+
+    //Hämta ett specifikt uppdrag baserat på mission_id
     private void getMissionById(Scanner scanner, Connection connection) throws SQLException {
         System.out.print("mission id: ");
         String input = scanner.nextLine();
 
         int id;
         try {
-            id = Integer.parseInt(input);
+            id = Integer.parseInt(input); //Kontrollerar att id är ett nummer
         } catch (NumberFormatException e) {
             System.out.println("Invalid id");
             return;
@@ -157,20 +165,13 @@ public class Main {
 
             try (var rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String spacecraft = rs.getString("spacecraft");
-                    String launchDate = rs.getString("launch_date");
-                    String rocket = rs.getString("carrier_rocket");
-                    String operator = rs.getString("operator");
-                    String type = rs.getString("mission_type");
-                    String outcome = rs.getString("outcome");
-
-                    System.out.println("Spacecraft: " +  spacecraft);
-                    System.out.println("Launch date: " + launchDate);
-                    System.out.println("Carrier rocket: " + rocket);
-                    System.out.println("Operator: " + operator);
-                    System.out.println("Mission type: " + type);
-                    System.out.println("Outcome: " + outcome);
-
+                    //Läs alla kolumner och skriv ut dem
+                    System.out.println("Spacecraft: " +  rs.getString("spacecraft"));
+                    System.out.println("Launch date: " +  rs.getString("launch_date"));
+                    System.out.println("Carrier rocket: " +  rs.getString("carrier_rocket"));
+                    System.out.println("operator: " +   rs.getString("operator"));
+                    System.out.println("Mission type: " + rs.getString("mission_type"));
+                    System.out.println("Outcome: " +  rs.getString("outcome"));
                 } else {
                     System.out.println("No mission found");
                 }
@@ -178,6 +179,8 @@ public class Main {
         }
 
     }
+
+    //Räknar hur många uppdrag som skedde ett visst år
     private void countMissionsByYear(Scanner scanner, Connection connection) throws SQLException {
         System.out.print("Year: ");
         String input = scanner.nextLine();
@@ -203,6 +206,8 @@ public class Main {
             }
         }
     }
+
+    //Skapa ett ntt konto i databasen
     private void createAccount(Scanner scanner, Connection connection) throws SQLException {
         System.out.print("First name: ");
         String firstName = scanner.nextLine();
@@ -216,6 +221,7 @@ public class Main {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
+        //Skapa ett användarnamn baserat på första 3 bokstäverna av för- och efternamn
         String usernamePart1 = firstName.length() >= 3 ? firstName.substring(0, 3) : firstName;
         String usernamePart2 = lastName.length() >= 3 ? lastName.substring(0, 3) : lastName;
         String name = usernamePart1 + usernamePart2;
@@ -233,6 +239,8 @@ public class Main {
         }
         System.out.println("Account created with username: " + name);
     }
+
+    //Uppdatera lösenord för ett konto baserat på user_id
     private void updateAccountPassword(Scanner scanner, Connection connection) throws SQLException {
         System.out.print("User id: ");
         String input = scanner.nextLine();
@@ -263,6 +271,8 @@ public class Main {
         }
 
     }
+
+    //Ta bort ett konto basserat på user_id
     private void deleteAccount(Scanner scanner, Connection connection) throws SQLException {
         System.out.print("User id: ");
         String input = scanner.nextLine();
