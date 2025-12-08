@@ -1,5 +1,7 @@
 package com.example;
 
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,7 +35,7 @@ public class Main {
             boolean loggedIn = login(scanner,connection);
 
             if (!loggedIn) {
-                System.out.println("Invalid login");
+                System.out.println("Invalid username or password");
                 return;
             }
 
@@ -104,6 +106,10 @@ public class Main {
                 case "0" -> running = false;
                 case "1" -> listMoonMissions(connection);
                 case "2" -> getMissionById(scanner, connection);
+                case "3" -> countMissionsByYear(scanner, connection);
+                case "4" -> createAccount(scanner, connection);
+                case "5" -> updateAccountPassword(scanner, connection);
+                case "6" -> deleteAccount(scanner, connection);
 
 
                     default -> System.out.println("Invalid option");
@@ -168,6 +174,118 @@ public class Main {
                 } else {
                     System.out.println("No mission found");
                 }
+            }
+        }
+
+    }
+    private void countMissionsByYear(Scanner scanner, Connection connection) throws SQLException {
+        System.out.print("Year: ");
+        String input = scanner.nextLine();
+
+        int year;
+
+        try {
+            year = Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid year");
+            return;
+        }
+        String sql = "select count(*) from moon_mission where year(launch_date) = ?";
+
+        try (var ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, year);
+
+            try (var rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    System.out.println("Mission in " + year + ": " + count);
+                }
+            }
+        }
+    }
+    private void createAccount(Scanner scanner, Connection connection) throws SQLException {
+        System.out.print("First name: ");
+        String firstName = scanner.nextLine();
+
+        System.out.print("Last name: ");
+        String lastName = scanner.nextLine();
+
+        System.out.print("SSN: ");
+        String ssn = scanner.nextLine();
+
+        System.out.print("Password: ");
+        String password = scanner.nextLine();
+
+        String usernamePart1 = firstName.length() >= 3 ? firstName.substring(0, 3) : firstName;
+        String usernamePart2 = lastName.length() >= 3 ? lastName.substring(0, 3) : lastName;
+        String name = usernamePart1 + usernamePart2;
+
+        String sql = "insert into account (name, password, first_name, last_name, ssn) values (?, ?, ?, ?, ?)";
+
+        try (var ps = connection.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, password);
+            ps.setString(3, firstName);
+            ps.setString(4, lastName);
+            ps.setString(5, ssn);
+
+            ps.executeUpdate();
+        }
+        System.out.println("Account created with username: " + name);
+    }
+    private void updateAccountPassword(Scanner scanner, Connection connection) throws SQLException {
+        System.out.print("User id: ");
+        String input = scanner.nextLine();
+
+        int userId;
+        try {
+            userId = Integer.parseInt(input);
+        }catch (NumberFormatException e) {
+            System.out.println("Invalid id");
+            return;
+        }
+        System.out.print("New password: ");
+        String newPassword = scanner.nextLine();
+
+        String sql = "update account set password = ? where user_id = ?";
+
+        try (var ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newPassword);
+            ps.setInt(2, userId);
+
+            int rowsUpdated = ps.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Password updated");
+            } else {
+                System.out.println("No password found for user id: " + userId);
+            }
+        }
+
+    }
+    private void deleteAccount(Scanner scanner, Connection connection) throws SQLException {
+        System.out.print("User id: ");
+        String input = scanner.nextLine();
+
+        int userId;
+        try {
+            userId = Integer.parseInt(input);
+        }catch (NumberFormatException e) {
+            System.out.println("Invalid id");
+            return;
+        }
+
+        String sql = "delete from account where user_id = ?";
+
+        try (var ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+
+            int rows = ps.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("Account deleted");
+            } else  {
+                System.out.println("No account found for user id: " + userId);
             }
         }
     }
